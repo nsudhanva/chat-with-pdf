@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List, Union
 from langchain.schema.messages import AIMessage, HumanMessage, SystemMessage
 from app.web.db import db
 from app.web.db.models import Message
@@ -7,9 +7,9 @@ from app.web.db.models.conversation import Conversation
 
 def get_messages_by_conversation_id(
     conversation_id: str,
-) -> AIMessage | HumanMessage | SystemMessage:
+) -> List[Union[AIMessage, HumanMessage, SystemMessage]]:
     """
-    Finds all messages that belong to the given conversation_id
+    Finds all messages that belong to the given conversation_id.
 
     :param conversation_id: The id of the conversation
 
@@ -28,7 +28,7 @@ def add_message_to_conversation(
 ) -> Message:
     """
     Creates and stores a new message tied to the given conversation_id
-        with the provided role and content
+    with the provided role and content.
 
     :param conversation_id: The id of the conversation
     :param role: The role of the message
@@ -45,7 +45,10 @@ def add_message_to_conversation(
 
 def get_conversation_components(conversation_id: str) -> Dict[str, str]:
     """
-    Returns the components used in a conversation
+    Returns the components used in a conversation.
+
+    :param conversation_id: The id of the conversation
+    :return: A dictionary containing components of the conversation
     """
     conversation = Conversation.find_by(id=conversation_id)
     return {
@@ -59,7 +62,12 @@ def set_conversation_components(
     conversation_id: str, llm: str, retriever: str, memory: str
 ) -> None:
     """
-    Sets the components used by a conversation
+    Sets the components used by a conversation.
+
+    :param conversation_id: The id of the conversation
+    :param llm: The language learning model
+    :param retriever: The data retriever
+    :param memory: The memory component
     """
     conversation = Conversation.find_by(id=conversation_id)
     conversation.update(llm=llm, retriever=retriever, memory=memory)

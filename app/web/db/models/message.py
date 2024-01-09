@@ -1,4 +1,5 @@
 import uuid
+from typing import Union
 from app.web.db import db
 from langchain.schema.messages import AIMessage, HumanMessage, SystemMessage
 from .base import BaseModel
@@ -17,10 +18,10 @@ class Message(BaseModel):
     )
     conversation = db.relationship("Conversation", back_populates="messages")
 
-    def as_dict(self):
+    def as_dict(self) -> dict[str, str]:
         return {"id": self.id, "role": self.role, "content": self.content}
 
-    def as_lc_message(self) -> HumanMessage | AIMessage | SystemMessage:
+    def as_lc_message(self) -> Union[HumanMessage, AIMessage, SystemMessage]:
         if self.role == "human":
             return HumanMessage(content=self.content)
         elif self.role == "ai":
