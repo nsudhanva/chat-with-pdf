@@ -319,3 +319,7 @@ node_modules
 psd
 thumb
 sketch
+
+# PDF
+upload/uploads
+*.pdf
