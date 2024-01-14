@@ -10,4 +10,6 @@ def build_chat(chat_args: ChatArgs):
     llm = build_llm(chat_args)
     memory = build_memory(chat_args)
 
-    return ConversationalRetrievalChain.from_llm(llm=llm, retriever=retriever, memory=memory)
+    return ConversationalRetrievalChain.from_llm(
+        llm=llm, retriever=retriever, memory=memory
+    )
