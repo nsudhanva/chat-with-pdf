@@ -3,23 +3,22 @@ from langchain.schema.messages import AIMessage, HumanMessage, SystemMessage
 from app.web.db import db
 from app.web.db.models import Message
 from app.web.db.models.conversation import Conversation
-from typing import List
 
 
-def get_messages_by_conversation_id(conversation_id: str) -> List[Message]:
+def get_messages_by_conversation_id(conversation_id: str) -> list:
     """
     Finds all messages that belong to the given conversation_id
 
     :param conversation_id: The id of the conversation
 
-    :return: A list of Message instances
+    :return: A list of messages
     """
     messages = (
         db.session.query(Message)
         .filter_by(conversation_id=conversation_id)
         .order_by(Message.created_on.desc())
     )
-    return list(messages)
+    return [message.as_lc_message() for message in messages]
 
 
 def add_message_to_conversation(

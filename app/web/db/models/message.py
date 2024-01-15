@@ -4,6 +4,7 @@ from langchain.schema.messages import AIMessage, HumanMessage, SystemMessage
 from .base import BaseModel
 from typing import Union
 
+
 class Message(BaseModel):
     id: str = db.Column(
         db.String(), primary_key=True, default=lambda: str(uuid.uuid4())
