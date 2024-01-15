@@ -48,11 +48,6 @@ def login_required(view):
     return wrapped_view
 
 
-def add_headers(response):
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    return response
-
-
 def load_logged_in_user():
     user_id = session.get("user_id")
 

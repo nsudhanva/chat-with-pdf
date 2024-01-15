@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-
 from langchain.memory import ConversationBufferMemory
 from langchain.schema import BaseChatMessageHistory
 
@@ -15,10 +14,12 @@ class SqlMessageHistory(BaseChatMessageHistory, BaseModel):
 
     def add_message(self, message):
         return add_message_to_conversation(
-            self.conversation_id, role=message.type, content=message.content
+            conversation_id=self.conversation_id,
+            role=message.type,
+            content=message.content,
         )
 
-    def clear(self) -> None:
+    def clear(self):
         pass
 
 

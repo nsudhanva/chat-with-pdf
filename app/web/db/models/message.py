@@ -1,9 +1,8 @@
 import uuid
-from typing import Union
 from app.web.db import db
 from langchain.schema.messages import AIMessage, HumanMessage, SystemMessage
 from .base import BaseModel
-
+from typing import Union
 
 class Message(BaseModel):
     id: str = db.Column(
@@ -18,7 +17,7 @@ class Message(BaseModel):
     )
     conversation = db.relationship("Conversation", back_populates="messages")
 
-    def as_dict(self) -> dict[str, str]:
+    def as_dict(self):
         return {"id": self.id, "role": self.role, "content": self.content}
 
     def as_lc_message(self) -> Union[HumanMessage, AIMessage, SystemMessage]:
