@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-deployment
+  labels:
+    app: chat-pdf
+    service: worker
+spec:
+  replicas: 1 # Adjust as needed
+  selector:
+    matchLabels:
+      app: chat-pdf
+      service: worker
+  template:
+    metadata:
+      labels:
+        app: chat-pdf
+        service: worker
+    spec:
+      containers:
+      - name: worker
+        image: YOUR_REGISTRY/chat-pdf-worker:latest # IMPORTANT: Replace YOUR_REGISTRY
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DATABASE_URL_PLACEHOLDER
+        - name: CELERY_BROKER_URL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: CELERY_BROKER_URL_PLACEHOLDER
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: OPENAI_API_KEY_PLACEHOLDER
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        # Add other necessary environment variables from ConfigMap or Secret
+        # - name: POSTGRES_USER
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: app-secrets
+        #       key: POSTGRES_USER_PLACEHOLDER
+        # - name: POSTGRES_PASSWORD
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: app-secrets
+        #       key: POSTGRES_PASSWORD_PLACEHOLDER
+        # Note: Celery workers usually don't have HTTP health checks. 
+        # Consider custom health checks if needed (e.g., checking if the process is running)
+        # or rely on Kubernetes's process liveness. For simplicity, omitting explicit probes here.

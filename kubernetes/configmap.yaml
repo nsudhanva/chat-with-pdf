@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  labels:
+    app: chat-pdf
+data:
+  # IMPORTANT: Replace placeholder values with your actual external service details
+  # These are used by backend and worker deployments.
+
+  # For PostgreSQL (replace with your actual external DB connection string)
+  DATABASE_URL_PLACEHOLDER: "postgresql://your_db_user:your_db_password@your-external-postgres-host:5432/your_db_name"
+
+  # For Redis (replace with your actual external Redis connection string)
+  CELERY_BROKER_URL_PLACEHOLDER: "redis://your-external-redis-host:6379/0"
+
+  # Internal URL for the upload service, used by the backend
+  # This assumes the upload-service Kubernetes service is named 'upload-service'
+  # and listens on port 8050.
+  UPLOAD_URL: "http://upload-service:8050"
+
+  # You can add other non-sensitive configurations here if needed by your application
+  # EXAMPLE_CONFIG_KEY: "example_value"

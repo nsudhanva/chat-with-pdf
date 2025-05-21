@@ -90,6 +90,8 @@ def handle_error(err):
         return {"message": err.description}, 401
     elif isinstance(err, BadRequest):
         logging.error(err)
-        return {"message": err.description}, 401
-
-    raise err
+        return {"message": err.description}, 400 # Corrected to 400
+    
+    # For any other exceptions, return a generic 500 error
+    logging.error(f"Unhandled exception: {err}", exc_info=True)
+    return {"message": "An unexpected error occurred. Please try again later."}, 500

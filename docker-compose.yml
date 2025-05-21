@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-appdb}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - UPLOAD_URL=http://upload_service:8050
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - FLASK_APP=app.web.wsgi:app # For potential flask commands, gunicorn CMD handles app loading
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # If using SQLite:
+      # - ./data:/data 
+    depends_on:
+      db:
+        condition: service_healthy # Wait for db to be healthy
+      redis:
+        condition: service_healthy # Wait for redis to be healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"] # Placeholder, needs /api/health endpoint
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  worker:
+    build:
+      context: ./
+      dockerfile: Dockerfile.worker
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-appdb}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # If using SQLite:
+      # - ./data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    environment:
+      # VITE_API_PROXY_TARGET is used by vite.config.ts during dev, 
+      # Nginx in the container is already configured to proxy /api to http://backend:8000
+      - VITE_API_PROXY_TARGET=http://backend:8000 
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  upload_service:
+    build:
+      context: ./upload
+      dockerfile: Dockerfile
+    ports:
+      - "${UPLOAD_SERVICE_PORT:-8050}:8050" # Host port mapping to container's UPLOAD_SERVICE_PORT
+    environment:
+      - UPLOAD_FOLDER=/app/uploads # Container path for uploads
+      - UPLOAD_SERVICE_PORT=8050 # Port Gunicorn listens on inside the container
+      - PYTHONUNBUFFERED=1
+      - FLASK_DEBUG=0 
+    volumes:
+      - persisted_uploads:/app/uploads # Named volume for uploads, or use ./persisted_uploads:/app/uploads for host bind mount
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8050/health || exit 1"] # Placeholder, needs /health endpoint
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_DB=${POSTGRES_DB:-appdb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432" # Optional: expose for direct access
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-appdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379" # Optional: expose for direct access
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data: {}
+  persisted_uploads: {} # For upload_service, if using a named volume
+  # If using SQLite for backend/worker:
+  # data: {}

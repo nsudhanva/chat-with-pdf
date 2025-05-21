@@ -12,6 +12,7 @@ from app.web.views import (
     score_views,
     client_views,
     conversation_views,
+    health_views, # Added health_views
 )
 
 
@@ -40,6 +41,7 @@ def register_blueprints(app):
     app.register_blueprint(score_views.bp)
     app.register_blueprint(conversation_views.bp)
     app.register_blueprint(client_views.bp)
+    app.register_blueprint(health_views.bp) # Registered health_views blueprint
 
 
 def register_hooks(app):
