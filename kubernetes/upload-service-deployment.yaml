@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upload-service-deployment
+  labels:
+    app: chat-pdf
+    service: upload-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat-pdf
+      service: upload-service
+  template:
+    metadata:
+      labels:
+        app: chat-pdf
+        service: upload-service
+    spec:
+      containers:
+      - name: upload-service
+        image: YOUR_REGISTRY/chat-pdf-upload-service:latest # IMPORTANT: Replace YOUR_REGISTRY
+        ports:
+        - containerPort: 8050
+        env:
+        - name: UPLOAD_FOLDER
+          value: "/app/uploads" # Default location for uploads
+        - name: UPLOAD_SERVICE_PORT
+          value: "8050"
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: FLASK_DEBUG # Ensure debug is off for production
+          value: "0" 
+        # Volume for uploads - using emptyDir for simplicity (ephemeral)
+        # For persistent storage, a PersistentVolumeClaim should be used.
+        volumeMounts:
+        - name: uploads-volume
+          mountPath: /app/uploads
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8050
+          initialDelaySeconds: 20
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8050
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: uploads-volume
+        emptyDir: {} # Makes uploads ephemeral, lost if pod restarts. Document this.

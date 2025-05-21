@@ -5,10 +5,17 @@ import os
 
 app = Flask(__name__)
 CORS(app)
-UPLOAD_FOLDER = "uploads"
+
+# Configuration
+UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", "uploads")
 ALLOWED_EXTENSIONS = {"pdf"}
+DEBUG_MODE = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
+SERVICE_PORT = int(os.environ.get("UPLOAD_SERVICE_PORT", 8050))
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+# Ensure the upload folder exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
 def allowed_file(filename):
@@ -41,5 +48,13 @@ def download_file(filename):
         return jsonify({"message": "File not found"}, 404)
 
 
+@app.route("/health", methods=["GET"])
+def health_check():
+    """
+    Health check endpoint for the upload service.
+    """
+    return jsonify({"status": "healthy", "service": "upload_service"}), 200
+
+
 if __name__ == "__main__":
-    app.run(debug=True, port=8050)
+    app.run(debug=DEBUG_MODE, port=SERVICE_PORT, host="0.0.0.0")

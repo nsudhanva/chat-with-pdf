@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  labels:
+    app: chat-pdf
+    service: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: chat-pdf
+      service: frontend
+  template:
+    metadata:
+      labels:
+        app: chat-pdf
+        service: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: YOUR_REGISTRY/chat-pdf-frontend:latest # IMPORTANT: Replace YOUR_REGISTRY
+        ports:
+        - containerPort: 80
+        # Nginx proxy is configured in its own nginx.conf to point to 'backend:8000'
+        # which will resolve to the backend service in Kubernetes.
+        # No specific environment variables needed here for proxying.
+        livenessProbe:
+          httpGet:
+            path: / # Check if Nginx is serving the root path
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10

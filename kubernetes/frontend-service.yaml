@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend # DNS name: frontend.default.svc.cluster.local
+  labels:
+    app: chat-pdf
+    service: frontend
+spec:
+  type: LoadBalancer # Exposes the service externally using a cloud provider's load balancer
+  selector:
+    app: chat-pdf # Matches labels of the frontend Deployment's pods
+    service: frontend
+  ports:
+  - name: http
+    port: 80        # Port the LoadBalancer will listen on
+    targetPort: 80   # Port on the pods (Nginx) that the service will forward traffic to
+    protocol: TCP

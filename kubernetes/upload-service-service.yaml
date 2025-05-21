@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: upload-service # DNS name: upload-service.default.svc.cluster.local
+  labels:
+    app: chat-pdf
+    service: upload-service
+spec:
+  type: ClusterIP # Only exposed within the cluster
+  selector:
+    app: chat-pdf # Matches labels of the upload-service Deployment's pods
+    service: upload-service
+  ports:
+  - name: http
+    port: 8050      # Port the service will be available on within the cluster
+    targetPort: 8050 # Port on the pods that the service will forward traffic to
+    protocol: TCP

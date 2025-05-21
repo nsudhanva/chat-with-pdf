@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  labels:
+    app: chat-pdf
+    service: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: chat-pdf
+      service: backend
+  template:
+    metadata:
+      labels:
+        app: chat-pdf
+        service: backend
+    spec:
+      containers:
+      - name: backend
+        image: YOUR_REGISTRY/chat-pdf-backend:latest # IMPORTANT: Replace YOUR_REGISTRY with your image registry
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DATABASE_URL_PLACEHOLDER 
+        - name: CELERY_BROKER_URL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: CELERY_BROKER_URL_PLACEHOLDER
+        - name: UPLOAD_URL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: UPLOAD_URL
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: OPENAI_API_KEY_PLACEHOLDER # Key name in the Secret object
+        - name: SECRET_KEY # Flask Secret Key
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: SECRET_KEY_PLACEHOLDER
+        - name: PYTHONUNBUFFERED 
+          value: "1"
+        # Add other necessary environment variables from ConfigMap or Secret
+        # - name: POSTGRES_USER
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: app-secrets
+        #       key: POSTGRES_USER_PLACEHOLDER
+        # - name: POSTGRES_PASSWORD
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: app-secrets
+        #       key: POSTGRES_PASSWORD_PLACEHOLDER
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3

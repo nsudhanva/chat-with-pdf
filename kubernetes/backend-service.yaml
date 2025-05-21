@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend # DNS name for other pods: backend.default.svc.cluster.local
+  labels:
+    app: chat-pdf
+    service: backend
+spec:
+  type: ClusterIP # Exposes the service on a cluster-internal IP.
+  selector:
+    app: chat-pdf # Matches labels of the backend Deployment's pods
+    service: backend
+  ports:
+  - name: http 
+    port: 8000      # Port the service will be available on within the cluster
+    targetPort: 8000 # Port on the pods that the service will forward traffic to
+    protocol: TCP
